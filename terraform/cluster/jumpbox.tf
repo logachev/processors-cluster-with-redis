@@ -49,4 +49,20 @@ resource "azurerm_virtual_machine" "jumpbox" {
         key_data = "${var.admin_ssh_key}"
     }    
   }
+
+    connection {
+        host = "${azurerm_public_ip.pip.fqdn}"
+        user = "azureuser"
+        type = "ssh"
+        private_key = "${file("~/.ssh/id_rsa")}"
+        timeout = "1m"
+        agent = false
+    }
+
+    provisioner "remote-exec" {
+        inline = [
+          "echo \"${tls_private_key.vmss_key.private_key_pem}\" > ~/.ssh/id_rsa",
+          "chmod 0600 ~/.ssh/id_rsa"
+        ]
+    }
 }

@@ -41,7 +41,7 @@ resource "azurerm_virtual_machine_scale_set" "workers" {
     disable_password_authentication = true
     ssh_keys {
         path     = "/home/azureuser/.ssh/authorized_keys"
-        key_data = "${var.admin_ssh_key}"
+        key_data = "${tls_private_key.vmss_key.public_key_openssh}"
     }
   }
 
