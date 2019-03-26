@@ -1,0 +1,63 @@
+- hosts: localhost
+  vars:
+    redis_download_url: http://download.redis.io/releases/redis-5.0.0.tar.gz
+    redis_folder: redis-5.0.0
+  remote_user: root
+  tasks:
+
+  - name: install dependencies
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      - gcc
+      - make
+      - tcl
+
+  - name: download redis
+    get_url:
+      url: "{{ redis_download_url }}"
+      dest: /usr/local/src/{{ redis_folder }}.tar.gz
+
+  - name: extract redis tarball
+    unarchive:
+      src: /usr/local/src/{{ redis_folder }}.tar.gz
+      dest: /usr/local/src
+      creates: /usr/local/src/{{ redis_folder }} }}/Makefile
+
+  - name: compile redis
+    command: make
+    args:
+      chdir: /usr/local/src/{{ redis_folder }}
+      creates: /usr/local/src/{{ redis_folder }}/src/redis-server
+
+  - name: install redis
+    command: make install
+    args:
+      chdir: /usr/local/src/{{ redis_folder }}
+
+  - name: create /etc/redis
+    file:
+      path: /etc/redis
+      state: directory
+
+  - name: create /var/redis/7000
+    file:
+      path: /var/redis/7000
+      state: directory
+
+
+  - name: copy init script
+    copy:
+      src: ./init_redis_script
+      dest: /etc/init.d/redis_7000
+      mode: 0755
+
+  - name: copy configuration file
+    copy:
+      src: ./redis_7000.conf
+      dest: /etc/redis/7000.conf
+      mode: 0644
+
+  - name: register redis service
+    command: chkconfig --add redis_7000
